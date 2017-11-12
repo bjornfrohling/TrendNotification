@@ -8,7 +8,7 @@ extension Droplet {
     let notificationController = NotificationController()
 
     // Route for getting trends
-    get("trends", handler: trendController.getTrends)
+    get("trends", handler: trendController.checkTrend)
 
     // Route for storing mobile device token
     post("registerDevice", handler: notificationController.registerDevice)

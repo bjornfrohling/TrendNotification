@@ -19,5 +19,6 @@ extension Config {
     /// schemas prepared before the app boots
     private func setupPreparations() throws {
       preparations.append(MobileClient.self)
+      preparations.append(TrendTopic.self)
     }
 }

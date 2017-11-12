@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import HTTP
 import VaporAPNS
 
 final class Notification {

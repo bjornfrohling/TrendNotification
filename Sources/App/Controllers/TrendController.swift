@@ -10,56 +10,75 @@ import Vapor
 
 class TrendController {
 
-  // test data
-  let testString = "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s. Tesla. Eniram. Finland. Tesla. Eniram. Eniram."
-  let testTopics = ["Tesla", "Eniram", "Finland", "iPhone"]
-
   /*
-   * Generates and sends a push notification for specified trend topics
+   * Generates and sends a push notification for a change in the specified topic
    */
-  func getTrends(request: Request) -> ResponseRepresentable {
-    let countedWords = countWords(inputString: testString)
-    let tupleArray = extractAndSortTrends(countedWords: countedWords, topicsToCheck: testTopics)
-    let pushMsg = composeTrendMessage(trends: tupleArray)
-    let notificationController = NotificationController()
-
-    return notificationController.sendPush(message: pushMsg)
+  func checkTrend(request: Request) -> ResponseRepresentable {
+    guard let topic = request.data["topic"]?.string,
+      let inputString = request.data["inputString"]?.string else {
+        return "Parameter error"
+    }
+    let topicCount = countTopic(topic: topic, inputString: inputString)
+    // Compare topic with previous topic
+    return compareTrend(topic: topic, topicCount: topicCount)
   }
 
   /*
-   * Count all existing words in the porvided String
+   * Count frequancy of topic in the porvided String
    */
-  func countWords(inputString: String) -> NSCountedSet {
+  func countTopic(topic: String, inputString: String) -> Int {
     let nolettersSet = CharacterSet.letters.inverted
     // Get array containing only words
     let words = inputString.components(separatedBy: nolettersSet)
-
-    return NSCountedSet(array: words)
+    let countedWords = NSCountedSet(array: words)
+    return countedWords.count(for: topic)
   }
 
   /*
-   * Extracts the provided topics from the countedWords and returns a sorrted Array containing tuples
+   * Composes and sends a push notification
    */
-  func extractAndSortTrends(countedWords: NSCountedSet, topicsToCheck: [String]) -> [(key: String, value: Int)] {
-    var trendsDict = [String: Int]()
-    for topic in topicsToCheck {
-      trendsDict[topic] = countedWords.count(for: topic)
-    }
-    // Sort topics by their count
-    let trendTupleArray = trendsDict.sorted { $0.value > $1.value }
-
-    return trendTupleArray
+  func sendPushMessage(trendTopic: TrendTopic) {
+    let trendMsg = "Topic '\(trendTopic.topic)' was found \(trendTopic.topicCount) times.\n"
+    let notificationController = NotificationController()
+    _ = notificationController.sendPush(message: trendMsg)
   }
 
   /*
-   * Composes a String based on the passed tuples
+   * Compares provided topic data with stored data
+   * and generates a notification in case of change
    */
-  func composeTrendMessage(trends: [(key: String, value: Int)]) -> String {
-    var trendMsg = ""
-    for topic in trends {
-      trendMsg += "Topic '\(topic.key)' was found \(topic.value) times.\n"
-    }
+  func compareTrend(topic: String, topicCount: Int) -> String {
+    print("compareTrend \(topic) c \(topicCount)")
+    do {
+      let topicArray = try TrendTopic.all().filter { $0.topic == topic }
+      if let storedTopic = topicArray.first {
+        print(">> topic already exists")
+        // Check previous stored values
+        if (storedTopic.topicCount != topicCount) {
+          // Topic count has changed
+          storedTopic.topicCount = topicCount
+          try storedTopic.save()
+          // Topic count has changed
+          sendPushMessage(trendTopic: storedTopic)
+          return "Frequancy of topic \(topic) changed"
 
-    return trendMsg
+        } else {
+          return "Frequancy topic \(topic) did not change"
+        }
+      } else {
+        // Store new topic
+        print("Topic did not exist")
+        let newTopic = TrendTopic(topic: topic, topicCount: topicCount)
+        try newTopic.save()
+        if topicCount > 0 {
+          sendPushMessage(trendTopic: newTopic)
+        }
+        return "New topic stored"
+      }
+
+    } catch {
+      return "Error in compareTrend()"
+    }
   }
+
 }
