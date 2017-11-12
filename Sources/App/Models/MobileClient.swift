@@ -14,9 +14,9 @@ final class MobileClient: Model {
   var storage = Storage()
   let deviceToken: String
   let bundleId = "com.test.app.notification"
-  let teamId = "some team Id"
-  let keyId = "some APNS-key-id"
-  let keyPath = "path to APNS-key-id"
+  let teamId = "some Apple team Id"
+  let keyId = "some Apple APNS-key-id"
+  let keyPath = "path APNS-key"
 
   
   init(request: Request) throws {
@@ -51,7 +51,7 @@ extension MobileClient: Preparation {
       mc.string("deviceToken")
     })
   }
-  
+
   static func revert(_ database: Database) throws {
     try database.delete(self)
   }
