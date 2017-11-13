@@ -21,3 +21,26 @@
         <img src="http://img.shields.io/badge/swift-3.1-brightgreen.svg" alt="Swift 3.1">
     </a>
 </center>
+
+## Vapor installation guide:
+http://beta.docs.vapor.codes/getting-started/install-on-macos/
+## Building the project:
+```
+vapor build
+```
+## Create the Xcode project:
+```
+vapor xcode
+```
+
+
+## API examples:
+Register device
+```
+POST localhost:8080/registerDevice?deviceToken=08991B8EFE52BFFA1D53650811111111111111
+```
+
+Check for trends
+```
+POST localhost:8080/trends?topic=Tesla&inputString=Lorem%20Ipsum%20is%20simply%20dummy%20text.%20Tesla`
+```
